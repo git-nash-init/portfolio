@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "vite build --config vite.config.ts",
+  "outputDirectory": "dist/public",
+  "rewrites": [
+    { "source": "/api/gh/:path*", "destination": "/api/gh?path=:path*" },
+    { "source": "/((?!api).*)", "destination": "/index.html" }
+  ]
+}
