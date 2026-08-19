@@ -1310,6 +1310,15 @@ export function Portfolio() {
             </div>
             <ContactForm />
             <p className="pf-contact-username">Avinash Thakur — Gurugram, India · Open for projects</p>
+            <a
+              href="https://avinashthakur.vercel.app/"
+              target="_blank"
+              rel="noreferrer"
+              className="pf-old-portfolio-link"
+              data-cursor-link
+            >
+              View the older version of this portfolio →
+            </a>
           </div>
         </section>
       </div>

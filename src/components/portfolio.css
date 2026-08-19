@@ -1457,3 +1457,14 @@
 @media (max-width: 860px) {
   .pf-contact-form-grid { grid-template-columns: 1fr; }
 }
+
+/* ── OLD PORTFOLIO LINK ── */
+.pf-old-portfolio-link {
+  display: inline-block; margin-top: 1.1rem;
+  color: #f4efe855; font-family: var(--font-mono); letter-spacing: 0.08em;
+  text-transform: uppercase; font-size: 0.68rem; text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.25s, border-color 0.25s;
+  cursor: none;
+}
+.pf-old-portfolio-link:hover { color: var(--gold); border-color: #d8a64a55; }
