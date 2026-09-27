@@ -959,18 +959,28 @@ export function Portfolio() {
   const heroWordRef = useRef<HTMLHeadingElement>(null);
   const heroSubRef = useRef<HTMLParagraphElement>(null);
   const onPreloaderDone = useCallback(() => setReady(true), []);
-  const [ghStats, setGhStats] = useState<{ repos: number; followers: number; stars: number; forks: number } | null>(null);
+  const [ghStats, setGhStats] = useState<{ repos: number; followers: number; stars: number; forks: number; privateRepos: number | null } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const [userRes, reposRes] = await Promise.all([
+        const [userRes, reposRes, meRes] = await Promise.all([
           fetch(`/api/gh/users/${GH_USER}`),
           fetch(`/api/gh/users/${GH_USER}/repos?per_page=100&sort=updated`),
+          fetch(`/api/gh/user`).catch(() => null),
         ]);
         const user = await userRes.json();
         const repos: Repo[] = await reposRes.json();
+        // Private counts are only exposed on the authenticated /user endpoint, so they
+        // appear only when GITHUB_TOKEN belongs to GH_USER and has repo scope.
+        let privateRepos: number | null = null;
+        if (meRes?.ok) {
+          const me = await meRes.json();
+          if (me?.login?.toLowerCase() === GH_USER.toLowerCase() && typeof me.total_private_repos === "number") {
+            privateRepos = me.total_private_repos;
+          }
+        }
         if (cancelled) return;
         const owned = Array.isArray(repos) ? repos.filter((r) => !r.fork && !r.archived && !r.private) : [];
         const stars = owned.reduce((sum, r) => sum + (r.stargazers_count || 0), 0);
@@ -980,6 +990,7 @@ export function Portfolio() {
           followers: typeof user?.followers === "number" ? user.followers : 0,
           stars,
           forks,
+          privateRepos,
         });
       } catch {
         // leave null; Numbers section falls back to a loading placeholder.
@@ -1220,7 +1231,11 @@ export function Portfolio() {
               <MetricCard key={`repos-${ghStats?.repos ?? "…"}`} value={ghStats ? String(ghStats.repos) : "—"} label="Public GitHub Repos" delay={0} />
               <MetricCard key={`followers-${ghStats?.followers ?? "…"}`} value={ghStats ? String(ghStats.followers) : "—"} label="GitHub Followers" delay={100} />
               <MetricCard key={`stars-${ghStats?.stars ?? "…"}`} value={ghStats ? String(ghStats.stars) : "—"} label="Total Stars Earned" delay={200} />
-              <MetricCard key={`forks-${ghStats?.forks ?? "…"}`} value={ghStats ? String(ghStats.forks) : "—"} label="Total Forks" delay={300} />
+              {ghStats?.privateRepos != null ? (
+                <MetricCard key={`private-${ghStats.privateRepos}`} value={String(ghStats.privateRepos)} label="Private Repos" delay={300} />
+              ) : (
+                <MetricCard key={`forks-${ghStats?.forks ?? "…"}`} value={ghStats ? String(ghStats.forks) : "—"} label="Total Forks" delay={300} />
+              )}
             </div>
             <p className="pf-numbers-live-tag">LIVE FROM GITHUB.COM/{GH_USER.toUpperCase()}</p>
           </div>

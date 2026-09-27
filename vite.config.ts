@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { proxyGithub } from "./api/_github.js";
 
 const env = loadEnv("development", process.cwd(), "");
 const port = Number(process.env.PORT ?? 5173);
@@ -12,21 +13,12 @@ const githubToken = env.GITHUB_TOKEN || process.env.GITHUB_TOKEN || "";
 function githubProxyPlugin(): Plugin {
   const handler: Connect.NextHandleFunction = async (req, res, next) => {
     if (!req.url || !req.url.startsWith("/api/gh/")) return next();
-    const upstream = "https://api.github.com/" + req.url.slice("/api/gh/".length);
-    const headers: Record<string, string> = {
-      "Accept": req.headers["accept"]?.toString() || "application/vnd.github+json",
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
-      "X-GitHub-Api-Version": "2022-11-28",
-    };
-    if (githubToken) headers["Authorization"] = `Bearer ${githubToken}`;
     try {
-      const upstreamRes = await fetch(upstream, { headers });
-      const buf = Buffer.from(await upstreamRes.arrayBuffer());
-      res.statusCode = upstreamRes.status;
-      const ct = upstreamRes.headers.get("content-type");
-      if (ct) res.setHeader("Content-Type", ct);
+      const out = await proxyGithub(req.url.slice("/api/gh/".length), req.headers["accept"]?.toString(), githubToken);
+      res.statusCode = out.status;
+      res.setHeader("Content-Type", out.contentType);
       res.setHeader("Cache-Control", "public, max-age=300");
-      res.end(buf);
+      res.end(out.body);
     } catch (err) {
       res.statusCode = 502;
       res.setHeader("Content-Type", "application/json");

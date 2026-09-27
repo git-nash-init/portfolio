@@ -48,5 +48,5 @@ vite.config.ts               # also hosts the dev-time GitHub proxy
 
 - Set `DISCORD_USER_ID` in `src/components/Portfolio.tsx` and join `discord.gg/lanyard`
 - Set `WEB3FORMS_ACCESS_KEY` in `src/components/Portfolio.tsx` (free key at web3forms.com)
-- Set `GITHUB_TOKEN` in Vercel project env (read-only scope)
+- Set `GITHUB_TOKEN` in `.env` and Vercel project env — a token **for git-nash-init** with read access to private repos (classic PAT: `repo`; fine-grained: all repos, Metadata read). Needed for the "Private Repos" stat; without it that card falls back to "Total Forks". The `/api/gh` proxy only allows the endpoints the site uses, so private repo names/contents are never exposed.
 - Replace placeholder images in `public/` (logo, opengraph, education logos)
