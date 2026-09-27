@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
-import { Github, Star, GitFork, ExternalLink, ArrowLeft, Search } from "lucide-react";
+import { Github, Star, GitFork, ExternalLink, ArrowLeft, Search, Globe } from "lucide-react";
 import "../components/portfolio.css";
 import { Cursor } from "../components/Portfolio";
 import { usePageMeta } from "../lib/seo";
@@ -21,19 +21,37 @@ function RepoCard({ repo, onHover }: { repo: Repo; onHover: (img: string | null,
   const langColor = repo.language ? LANG_COLORS[repo.language] || "#f4efe8" : "#f4efe8";
 
   return (
-    <a
-      href={repo.html_url}
-      target="_blank"
-      rel="noreferrer"
+    <article
       className="pf-repo-card"
       data-reveal="true"
-      data-cursor-link
+      tabIndex={0}
       onMouseEnter={() => { load(); onHover(img ?? null, repo); }}
       onFocus={() => { load(); onHover(img ?? null, repo); }}
     >
       <div className="pf-repo-card-head">
         <span className="pf-repo-card-name">{repo.name}</span>
-        <ExternalLink size={14} />
+        <div className="pf-repo-card-links">
+          {repo.homepage && (
+            <a
+              href={repo.homepage}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open ${repo.name} live site`}
+              data-cursor-link
+            >
+              <Globe size={14} />
+            </a>
+          )}
+          <a
+            href={repo.html_url}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Open ${repo.name} on GitHub`}
+            data-cursor-link
+          >
+            <ExternalLink size={14} />
+          </a>
+        </div>
       </div>
       <p className="pf-repo-card-desc">{repo.description || "No description provided."}</p>
       <div className="pf-repo-card-topics">
@@ -53,31 +71,40 @@ function RepoCard({ repo, onHover }: { repo: Repo; onHover: (img: string | null,
       <span className="pf-repo-preview-status">
         {img === undefined ? "" : img ? "PREVIEW READY" : "NO PREVIEW"}
       </span>
-    </a>
+    </article>
   );
 }
 
 function HoverPreview({ image, repo }: { image: string | null; repo: Repo | null }) {
+  const liveUrl = repo?.homepage || null;
+  const frame = (
+    <div className="pf-repo-preview-frame">
+      {image && repo ? (
+        <img src={image} alt={repo.name} draggable={false} />
+      ) : (
+        <div className="pf-repo-preview-empty">
+          <span>{repo ? "// no readme image" : "// hover a repo"}</span>
+          <span>{repo ? repo.name : "preview surface"}</span>
+        </div>
+      )}
+      <div className="pf-repo-preview-scan" />
+      <div className="pf-repo-preview-corner pf-repo-preview-corner-tl" />
+      <div className="pf-repo-preview-corner pf-repo-preview-corner-tr" />
+      <div className="pf-repo-preview-corner pf-repo-preview-corner-bl" />
+      <div className="pf-repo-preview-corner pf-repo-preview-corner-br" />
+    </div>
+  );
   return (
-    <div className={`pf-repo-preview${image ? " is-loaded" : ""}`} aria-hidden="true">
-      <div className="pf-repo-preview-frame">
-        {image && repo ? (
-          <img src={image} alt={repo.name} draggable={false} />
-        ) : (
-          <div className="pf-repo-preview-empty">
-            <span>{repo ? "// no readme image" : "// hover a repo"}</span>
-            <span>{repo ? repo.name : "preview surface"}</span>
-          </div>
-        )}
-        <div className="pf-repo-preview-scan" />
-        <div className="pf-repo-preview-corner pf-repo-preview-corner-tl" />
-        <div className="pf-repo-preview-corner pf-repo-preview-corner-tr" />
-        <div className="pf-repo-preview-corner pf-repo-preview-corner-bl" />
-        <div className="pf-repo-preview-corner pf-repo-preview-corner-br" />
-      </div>
+    <div className={`pf-repo-preview${image ? " is-loaded" : ""}`}>
+      {liveUrl ? (
+        <a href={liveUrl} target="_blank" rel="noreferrer" className="pf-repo-preview-link" aria-label={`Open ${repo?.name} live site`} data-cursor-link>
+          {frame}
+        </a>
+      ) : frame}
       <div className="pf-repo-preview-meta">
         <span>{repo ? repo.name.toUpperCase() : "AWAITING SIGNAL"}</span>
         <span>{repo ? (repo.description ? repo.description.slice(0, 80) : "—") : "MOVE CURSOR OVER A REPOSITORY"}</span>
+        {liveUrl && <span className="pf-repo-preview-live-tag">CLICK TO OPEN LIVE SITE →</span>}
       </div>
     </div>
   );

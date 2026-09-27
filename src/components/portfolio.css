@@ -1478,3 +1478,23 @@
 .pf-numbers-live-tag::before {
   content: "● "; color: #23a55a;
 }
+
+/* ── PROJECT LIVE-LINK BUTTONS ── */
+.pf-project-links { display: flex; align-items: center; gap: 0.6rem; }
+.pf-project-icon-live { color: var(--gold); }
+.pf-project-row[data-tone="cyan"]:hover .pf-project-icon-live,
+.pf-project-row[data-tone="red"]:hover .pf-project-icon-live,
+.pf-project-row[data-tone="gold"]:hover .pf-project-icon-live,
+.pf-project-row[data-tone="violet"]:hover .pf-project-icon-live,
+.pf-project-row[data-tone="steel"]:hover .pf-project-icon-live { color: var(--gold); }
+
+.pf-repo-card:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.pf-repo-card-links { display: flex; align-items: center; gap: 0.55rem; }
+.pf-repo-card-links a { color: #f4efe85a; display: flex; transition: color 0.3s; text-decoration: none; }
+.pf-repo-card-links a:hover { color: var(--gold); }
+
+.pf-repo-preview-link { display: block; cursor: none; }
+.pf-repo-preview-live-tag {
+  color: var(--gold) !important; font-size: 0.66rem !important;
+  letter-spacing: 0.1em; margin-top: 0.15rem;
+}

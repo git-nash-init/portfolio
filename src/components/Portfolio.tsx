@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "wouter";
-import { Code, Github, Linkedin, ExternalLink, ArrowRight, Star, GraduationCap, Briefcase, Youtube, Mail, CalendarClock, Send } from "lucide-react";
+import { Code, Github, Linkedin, ExternalLink, ArrowRight, Star, GraduationCap, Briefcase, Youtube, Mail, CalendarClock, Send, Globe } from "lucide-react";
 import { usePageMeta } from "../lib/seo";
 import { GH_USER, LANG_COLORS, fetchReadmePreview, timeAgo, type Repo } from "../lib/github";
 import { SKILLS, CATEGORIES, type SkillCategory } from "../lib/skills";
@@ -257,17 +257,32 @@ function ProjectShowcase() {
                 {tags.map((t) => <span key={t}>{t}</span>)}
                 <span className="pf-project-stars"><Star size={12} aria-hidden="true" /> {p.stargazers_count}</span>
               </div>
-              <a
-                href={p.html_url}
-                target="_blank"
-                rel="noreferrer"
-                className="pf-project-icon"
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`Open ${p.name} on GitHub`}
-                data-cursor-link
-              >
-                <ExternalLink size={18} />
-              </a>
+              <div className="pf-project-links">
+                {p.homepage && (
+                  <a
+                    href={p.homepage}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="pf-project-icon pf-project-icon-live"
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={`Open ${p.name} live site`}
+                    data-cursor-link
+                  >
+                    <Globe size={18} />
+                  </a>
+                )}
+                <a
+                  href={p.html_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="pf-project-icon"
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={`Open ${p.name} on GitHub`}
+                  data-cursor-link
+                >
+                  <ExternalLink size={18} />
+                </a>
+              </div>
             </article>
           );
         })}
