@@ -168,7 +168,7 @@ function ProjectShowcase() {
       .then((data: Repo[]) => {
         if (cancelled) return;
         const filtered = data
-          .filter((r) => !r.fork && !r.archived && !r.private)
+          .filter((r) => !r.fork && !r.archived)
           .sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime())
           .slice(0, 5);
         setRepos(filtered);
@@ -237,25 +237,31 @@ function ProjectShowcase() {
           const index = String(i + 1).padStart(2, "0");
           const tags = (p.topics || []).slice(0, 3);
           if (tags.length === 0 && p.language) tags.push(p.language);
+          const primaryUrl = p.homepage || (!p.private ? p.html_url : "");
           return (
             <article
               key={p.id}
               className="pf-project-row"
               data-tone={tone}
               data-reveal="true"
+              data-cursor-link={primaryUrl ? true : undefined}
+              tabIndex={primaryUrl ? 0 : undefined}
+              role={primaryUrl ? "link" : undefined}
               style={{ transitionDelay: `${i * 0.08}s` }}
               onMouseEnter={() => onRowEnter(p)}
               onMouseLeave={onRowLeave}
+              onClick={() => { if (primaryUrl) window.open(primaryUrl, "_blank", "noopener,noreferrer"); }}
+              onKeyDown={(e) => { if (primaryUrl && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); window.open(primaryUrl, "_blank", "noopener,noreferrer"); } }}
             >
               <span className="pf-project-index">{index}</span>
               <div className="pf-project-main">
-                <span className="pf-project-eyebrow">{p.language || "Repository"} · {timeAgo(p.pushed_at)}</span>
+                <span className="pf-project-eyebrow">{p.language || "Repository"} · {timeAgo(p.pushed_at)}{p.private ? " · PRIVATE" : ""}</span>
                 <h3>{p.name}</h3>
                 <p>{p.description || "No description provided."}</p>
               </div>
               <div className="pf-project-tags">
                 {tags.map((t) => <span key={t}>{t}</span>)}
-                <span className="pf-project-stars"><Star size={12} aria-hidden="true" /> {p.stargazers_count}</span>
+                {!p.private && <span className="pf-project-stars"><Star size={12} aria-hidden="true" /> {p.stargazers_count}</span>}
               </div>
               <div className="pf-project-links">
                 {p.homepage && (
@@ -271,17 +277,19 @@ function ProjectShowcase() {
                     <Globe size={18} />
                   </a>
                 )}
-                <a
-                  href={p.html_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="pf-project-icon"
-                  onClick={(e) => e.stopPropagation()}
-                  aria-label={`Open ${p.name} on GitHub`}
-                  data-cursor-link
-                >
-                  <ExternalLink size={18} />
-                </a>
+                {!p.private && (
+                  <a
+                    href={p.html_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="pf-project-icon"
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={`Open ${p.name} on GitHub`}
+                    data-cursor-link
+                  >
+                    <ExternalLink size={18} />
+                  </a>
+                )}
               </div>
             </article>
           );

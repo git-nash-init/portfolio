@@ -19,14 +19,19 @@ function RepoCard({ repo, onHover }: { repo: Repo; onHover: (img: string | null,
   }
 
   const langColor = repo.language ? LANG_COLORS[repo.language] || "#f4efe8" : "#f4efe8";
+  const primaryUrl = repo.homepage || (!repo.private ? repo.html_url : "");
 
   return (
     <article
       className="pf-repo-card"
       data-reveal="true"
       tabIndex={0}
+      data-cursor-link={primaryUrl ? true : undefined}
+      role={primaryUrl ? "link" : undefined}
       onMouseEnter={() => { load(); onHover(img ?? null, repo); }}
       onFocus={() => { load(); onHover(img ?? null, repo); }}
+      onClick={() => { if (primaryUrl) window.open(primaryUrl, "_blank", "noopener,noreferrer"); }}
+      onKeyDown={(e) => { if (primaryUrl && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); window.open(primaryUrl, "_blank", "noopener,noreferrer"); } }}
     >
       <div className="pf-repo-card-head">
         <span className="pf-repo-card-name">{repo.name}</span>
@@ -36,21 +41,25 @@ function RepoCard({ repo, onHover }: { repo: Repo; onHover: (img: string | null,
               href={repo.homepage}
               target="_blank"
               rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
               aria-label={`Open ${repo.name} live site`}
               data-cursor-link
             >
               <Globe size={14} />
             </a>
           )}
-          <a
-            href={repo.html_url}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Open ${repo.name} on GitHub`}
-            data-cursor-link
-          >
-            <ExternalLink size={14} />
-          </a>
+          {!repo.private && (
+            <a
+              href={repo.html_url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Open ${repo.name} on GitHub`}
+              data-cursor-link
+            >
+              <ExternalLink size={14} />
+            </a>
+          )}
         </div>
       </div>
       <p className="pf-repo-card-desc">{repo.description || "No description provided."}</p>
@@ -64,8 +73,14 @@ function RepoCard({ repo, onHover }: { repo: Repo; onHover: (img: string | null,
           <span className="pf-repo-lang-dot" style={{ background: langColor }} />
           <span>{repo.language || "—"}</span>
         </span>
-        <span className="pf-repo-stat"><Star size={12} /> {repo.stargazers_count}</span>
-        <span className="pf-repo-stat"><GitFork size={12} /> {repo.forks_count}</span>
+        {repo.private ? (
+          <span className="pf-repo-stat pf-repo-stat-private">PRIVATE</span>
+        ) : (
+          <>
+            <span className="pf-repo-stat"><Star size={12} /> {repo.stargazers_count}</span>
+            <span className="pf-repo-stat"><GitFork size={12} /> {repo.forks_count}</span>
+          </>
+        )}
         <span className="pf-repo-stat pf-repo-stat-meta">{timeAgo(repo.pushed_at)}</span>
       </div>
       <span className="pf-repo-preview-status">
@@ -132,7 +147,7 @@ export default function ProjectsPage() {
       })
       .then((data: Repo[]) => {
         if (cancelled) return;
-        const filtered = data.filter((r) => !r.fork && !r.archived && !r.private);
+        const filtered = data.filter((r) => !r.fork && !r.archived);
         setRepos(filtered);
       })
       .catch((err) => { if (!cancelled) setError(String(err.message || err)); });

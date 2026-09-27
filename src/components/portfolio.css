@@ -1498,3 +1498,9 @@
   color: var(--gold) !important; font-size: 0.66rem !important;
   letter-spacing: 0.1em; margin-top: 0.15rem;
 }
+
+/* ── PRIVATE REPO INDICATOR ── */
+.pf-repo-stat-private {
+  color: var(--gold) !important; letter-spacing: 0.12em; font-weight: 600;
+}
+.pf-project-row[data-cursor-link] { cursor: none; }

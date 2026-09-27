@@ -30,12 +30,73 @@ export async function proxyGithub(pathWithQuery: string, accept: string | undefi
     body: Buffer.from(await res.arrayBuffer()),
   });
 
-  // users/{owner} and users/{owner}/repos — public data only (that endpoint never lists private repos).
+  // users/{owner} — public profile only.
   if (lower[0] === "users" && lower[1] === OWNER && parts.length === 2) {
     return passthrough(await gh(`users/${GH_USER}`));
   }
+
+  // users/{owner}/repos — public repos, plus the owner's private repos merged in (if the
+  // token belongs to the owner). Every repo is reduced to a fixed, safe field set, and
+  // private entries never carry html_url/stars/forks, so the source is never reachable
+  // and no private detail beyond name/description/live-link/language leaves this proxy.
   if (lower[0] === "users" && lower[1] === OWNER && lower[2] === "repos" && parts.length === 3) {
-    return passthrough(await gh(`users/${GH_USER}/repos${query ? `?${query}` : ""}`));
+    const publicRes = await gh(`users/${GH_USER}/repos${query ? `?${query}` : ""}`);
+    if (!publicRes.ok) return passthrough(publicRes);
+    const publicRepos = await publicRes.json();
+    const merged: any[] = Array.isArray(publicRepos) ? publicRepos.slice() : [];
+
+    if (token) {
+      try {
+        const meRes = await gh("user", { ...headers, Accept: "application/vnd.github+json" });
+        if (meRes.ok) {
+          const me = await meRes.json();
+          if (me?.login?.toLowerCase() === OWNER) {
+            const qs = new URLSearchParams(query);
+            qs.set("visibility", "all");
+            qs.set("affiliation", "owner");
+            if (!qs.has("per_page")) qs.set("per_page", "100");
+            if (!qs.has("sort")) qs.set("sort", "updated");
+            const allRes = await gh(`user/repos?${qs.toString()}`, { ...headers, Accept: "application/vnd.github+json" });
+            if (allRes.ok) {
+              const allRepos = await allRes.json();
+              if (Array.isArray(allRepos)) {
+                const existingIds = new Set(merged.map((r) => r.id));
+                for (const r of allRepos) {
+                  if (r.private && r.owner?.login?.toLowerCase() === OWNER && !existingIds.has(r.id)) {
+                    merged.push(r);
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch {
+        // Any failure here just means private repos are skipped; the public list still returns.
+      }
+    }
+
+    const sanitized = merged
+      .map((r) => {
+        const isPrivate = !!r.private;
+        return {
+          id: r.id,
+          name: r.name,
+          description: r.description ?? null,
+          html_url: isPrivate ? "" : r.html_url,
+          homepage: r.homepage ?? null,
+          stargazers_count: isPrivate ? 0 : r.stargazers_count ?? 0,
+          forks_count: isPrivate ? 0 : r.forks_count ?? 0,
+          language: r.language ?? null,
+          topics: Array.isArray(r.topics) ? r.topics : [],
+          pushed_at: r.pushed_at,
+          fork: !!r.fork,
+          archived: !!r.archived,
+          private: isPrivate,
+          default_branch: r.default_branch ?? "main",
+        };
+      })
+      .sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime());
+    return json(200, sanitized);
   }
 
   // user — authenticated profile, reduced to the private repo count.
