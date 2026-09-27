@@ -1468,3 +1468,13 @@
   cursor: none;
 }
 .pf-old-portfolio-link:hover { color: var(--gold); border-color: #d8a64a55; }
+
+/* ── LIVE GITHUB TAG (Numbers section) ── */
+.pf-numbers-live-tag {
+  color: #f4efe855; font-family: var(--font-mono); letter-spacing: 0.14em;
+  text-transform: uppercase; font-size: 0.68rem; text-align: right;
+  margin: 0.9rem 0 0;
+}
+.pf-numbers-live-tag::before {
+  content: "● "; color: #23a55a;
+}

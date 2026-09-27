@@ -959,6 +959,35 @@ export function Portfolio() {
   const heroWordRef = useRef<HTMLHeadingElement>(null);
   const heroSubRef = useRef<HTMLParagraphElement>(null);
   const onPreloaderDone = useCallback(() => setReady(true), []);
+  const [ghStats, setGhStats] = useState<{ repos: number; followers: number; stars: number; forks: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const [userRes, reposRes] = await Promise.all([
+          fetch(`/api/gh/users/${GH_USER}`),
+          fetch(`/api/gh/users/${GH_USER}/repos?per_page=100&sort=updated`),
+        ]);
+        const user = await userRes.json();
+        const repos: Repo[] = await reposRes.json();
+        if (cancelled) return;
+        const owned = Array.isArray(repos) ? repos.filter((r) => !r.fork && !r.archived && !r.private) : [];
+        const stars = owned.reduce((sum, r) => sum + (r.stargazers_count || 0), 0);
+        const forks = owned.reduce((sum, r) => sum + (r.forks_count || 0), 0);
+        setGhStats({
+          repos: typeof user?.public_repos === "number" ? user.public_repos : owned.length,
+          followers: typeof user?.followers === "number" ? user.followers : 0,
+          stars,
+          forks,
+        });
+      } catch {
+        // leave null; Numbers section falls back to a loading placeholder.
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (!ready) return;
@@ -1188,11 +1217,12 @@ export function Portfolio() {
           <div className="pf-section-shell">
             <p className="pf-chapter-label" data-reveal="true">02 / Numbers</p>
             <div className="pf-metrics-grid">
-              <MetricCard value="16"  label="Public GitHub Repos"        delay={0} />
-              <MetricCard value="8+"  label="Client Apps Shipped"        delay={100} />
-              <MetricCard value="2"   label="SaaS Products in Build"     delay={200} />
-              <MetricCard value="5+"  label="Sites Live in Production"   delay={300} />
+              <MetricCard key={`repos-${ghStats?.repos ?? "…"}`} value={ghStats ? String(ghStats.repos) : "—"} label="Public GitHub Repos" delay={0} />
+              <MetricCard key={`followers-${ghStats?.followers ?? "…"}`} value={ghStats ? String(ghStats.followers) : "—"} label="GitHub Followers" delay={100} />
+              <MetricCard key={`stars-${ghStats?.stars ?? "…"}`} value={ghStats ? String(ghStats.stars) : "—"} label="Total Stars Earned" delay={200} />
+              <MetricCard key={`forks-${ghStats?.forks ?? "…"}`} value={ghStats ? String(ghStats.forks) : "—"} label="Total Forks" delay={300} />
             </div>
+            <p className="pf-numbers-live-tag">LIVE FROM GITHUB.COM/{GH_USER.toUpperCase()}</p>
           </div>
         </section>
 
