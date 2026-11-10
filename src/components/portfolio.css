@@ -1402,6 +1402,9 @@
   border-color: #39e8ff4a; color: var(--text);
 }
 .pf-contact-actions a.pf-contact-book:hover { border-color: var(--cyan); background: #39e8ff1c; }
+.pf-contact-actions a.pf-contact-whatsapp { border-color: #25d36659; background: #25d36612; }
+.pf-contact-actions a.pf-contact-whatsapp svg { color: #25d366; }
+.pf-contact-actions a.pf-contact-whatsapp:hover { border-color: #25d366; background: #25d36622; }
 .pf-contact-form {
   text-align: left;
   background: #ffffff07; border: 1px solid var(--line);
