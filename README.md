@@ -2,6 +2,8 @@
 
 Cinematic personal portfolio. Vite + React + TypeScript SPA, deployed on Vercel at [avinashthakur.com](https://avinashthakur.com).
 
+![Preview](docs/preview.webp)
+
 ### Stack
 
 - Vite 6, React 18, TypeScript
